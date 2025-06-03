@@ -1,37 +1,35 @@
 <template>
-    <div class="login-page">
-      <!-- Lado esquerdo -->
-      <div class="account-illustration">
-        <img src="../assets/logo-ced.png" alt="Logo CeD+" />
+  <div class="login-page">
+    <div class="account-illustration">
+      <img src="../assets/logo-ced.png" alt="Logo CeD+" />
         <p>Crescimento e Desenvolvimento</p>
-      </div>
-  
-      <!-- Lado direito -->
-      <div class="form-container">
-        <h1>Entrar</h1>
-        <p class="subtitle">Insira seus dados para acessar sua conta no CeD+</p>
-  
-        <label for="cpf">CPF</label>
-        <input id="cpf" type="text" placeholder="Digite seu CPF" />
-  
-        <label for="senha">Senha</label>
-        <input id="senha" type="password" placeholder="Digite sua senha" />
-  
-        <div class="password-options">
-          <a href="#">Esqueceu a senha?</a>
-        </div>
-  
-        <button class="submit-btn">Entrar</button>
-  
-        <p class="login-link">
-          Ainda não é nosso parceiro?
-          <a href="/">Cadastre-se</a>
-        </p>
-      </div>
     </div>
-  </template>
   
-  <style scoped>
+    <div class="form-container">
+      <h1>Entrar</h1>
+      <p class="subtitle">Insira seus dados para acessar sua conta no CeD+</p>
+  
+      <label for="cpf">CPF</label>
+      <input id="cpf" type="text" placeholder="Digite seu CPF" />
+  
+      <label for="senha">Senha</label>
+      <input id="senha" type="password" placeholder="Digite sua senha" />
+  
+      <div class="password-options">
+        <a href="#">Esqueceu a senha?</a>
+      </div>
+  
+      <button class="submit-btn">Entrar</button>
+  
+      <p class="login-link">
+        Ainda não é nosso parceiro?
+        <a href="/">Cadastre-se</a>
+      </p>
+    </div>
+  </div>
+</template>
+  
+<style scoped>
   .login-page {
     display: flex;
     height: 100vh;
@@ -130,5 +128,5 @@
     text-decoration: none;
     font-weight: 600;
   }
-  </style>
+</style>
   
