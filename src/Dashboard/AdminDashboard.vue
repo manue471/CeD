@@ -2,21 +2,40 @@
   <div class="dashboard">
     <!-- Sidebar -->
     <aside class="sidebar">
-      <img src="../assets/ced-logo-cor.png" width="180px" height="100px" alt="Logo CeD+" />
+      <img
+        src="../assets/ced-logo-cor.png"
+        width="180px"
+        height="100px"
+        alt="Logo CeD+"
+      />
       <nav class="nav-menu">
-        <a href="#" class="nav-item" :class="{ active: activeView === 'overview' }" @click.prevent="activeView = 'overview'">
+        <a
+          href="#"
+          class="nav-item"
+          :class="{ active: activeView === 'overview' }"
+          @click.prevent="activeView = 'overview'"
+        >
           <span class="icon">🏠</span>
           <span class="label">Visão Geral</span>
         </a>
-        <a href="#" class="nav-item" :class="{ active: activeView === 'pacientes' }" @click.prevent="activeView = 'pacientes'">
+        <a
+          href="#"
+          class="nav-item"
+          :class="{ active: activeView === 'pacientes' }"
+          @click.prevent="activeView = 'pacientes'"
+        >
           <span class="icon">❤️</span>
           <span class="label">Pacientes</span>
         </a>
-       <a href="#" class="nav-item" :class="{ active: activeView === 'consultas' }" @click.prevent="activeView = 'consultas'">
-
-        <span class="icon">📅</span>
-        <span class="label">Consultas</span>
-       </a>
+        <a
+          href="#"
+          class="nav-item"
+          :class="{ active: activeView === 'consultas' }"
+          @click.prevent="activeView = 'consultas'"
+        >
+          <span class="icon">📅</span>
+          <span class="label">Consultas</span>
+        </a>
         <a href="#" class="nav-item">
           <span class="icon">⚙️</span>
           <span class="label">Relatórios</span>
@@ -62,8 +81,12 @@
             <AppointmentItem name="Lucas" specialty="Cardiologia" />
           </div>
           <div class="actions">
-            <button class="btn" @click="openModal('paciente')">+ Novo Paciente</button>
-            <button class="btn" @click="openModal('consulta')">+ Registrar Consulta</button>
+            <button class="btn" @click="openModal('paciente')">
+              + Novo Paciente
+            </button>
+            <button class="btn" @click="openModal('consulta')">
+              + Registrar Consulta
+            </button>
           </div>
         </section>
       </template>
@@ -71,7 +94,9 @@
       <template v-else-if="activeView === 'pacientes'">
         <section class="pacientes-view">
           <div class="header">
-            <button class="btn" @click="openModal('paciente')">+ Novo Paciente</button>
+            <button class="btn" @click="openModal('paciente')">
+              + Novo Paciente
+            </button>
             <input type="text" class="search" placeholder="Pesquisar" />
           </div>
           <section class="chart-section">
@@ -94,7 +119,7 @@
                 <td>{{ p.nome }}</td>
                 <td>{{ p.nascimento }}</td>
                 <td>{{ p.sexo }}</td>
-                <td>{{ p.urgencia ? 'Sim' : 'Não' }}</td>
+                <td>{{ p.urgencia ? "Sim" : "Não" }}</td>
               </tr>
             </tbody>
           </table>
@@ -107,7 +132,9 @@
       <div class="modal-content">
         <button class="modal-close" @click="closeModal">×</button>
         <h2>Cadastrar paciente</h2>
-        <p class="subtext">Insira os dados do seu paciente para localizarmos no Banco de Dados.</p>
+        <p class="subtext">
+          Insira os dados do seu paciente para localizarmos no Banco de Dados.
+        </p>
         <label>Nome completo</label>
         <input type="text" placeholder="Digite aqui" class="input" />
         <label>Data de nascimento</label>
@@ -135,77 +162,106 @@
       </div>
     </div>
     <div v-if="activeModal === 'consulta'" class="modal-overlay">
-        <div class="modal-content">
-            <button class="modal-close" @click="closeModal">×</button>
-            
-            <h2>Cadastrar consulta</h2>
-            <p class="subtext">Insira os dados breves da consulta.</p>
+      <div class="modal-content">
+        <button class="modal-close" @click="closeModal">×</button>
 
-            <label>Cód. do Paciente</label>
-            <input type="text" placeholder="Digite aqui" class="input" />
+        <h2>Cadastrar consulta</h2>
+        <p class="subtext">Insira os dados breves da consulta.</p>
 
-            <label>Descrição breve de sintomas</label>
-            <textarea placeholder="Digite aqui" class="input" style="height: 100px;"></textarea>
+        <label>Cód. do Paciente</label>
+        <input type="text" placeholder="Digite aqui" class="input" />
 
-            <div class="form-row">
-            <div class="form-column">
-                <label>Data</label>
-                <input type="date" class="input" />
-            </div>
-            <div class="form-column">
-                <label>Horário</label>
-                <input type="time" class="input" />
-            </div>
-            </div>
+        <label>Descrição breve de sintomas</label>
+        <textarea
+          placeholder="Digite aqui"
+          class="input"
+          style="height: 100px"
+        ></textarea>
 
-            <label>Anexos</label>
-            <input type="text" placeholder="Arquivos de exames enviados, receitas (PDF ou imagens)" class="input" />
-
-            <button class="submit-button">Cadastrar</button>
+        <div class="form-row">
+          <div class="form-column">
+            <label>Data</label>
+            <input type="date" class="input" />
+          </div>
+          <div class="form-column">
+            <label>Horário</label>
+            <input type="time" class="input" />
+          </div>
         </div>
+
+        <label>Anexos</label>
+        <input
+          type="text"
+          placeholder="Arquivos de exames enviados, receitas (PDF ou imagens)"
+          class="input"
+        />
+
+        <button class="submit-button">Cadastrar</button>
+      </div>
     </div>
 
     <!-- Modal de consulta -->
     <template v-else-if="activeView === 'consultas'">
-        <section class="consultas-view" style="display: flex; justify-content: center; padding: 2rem; margin-right: 100px;">
-            <div style="width: 100%; max-width: 960px;">
-            <header class="header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                <h2 style="font-size: 1.5rem;">Consultas</h2>
-                <div style="display: flex; gap: 1rem;">
-                <button @click="openModal('consulta')" class="btn">+ Nova Consulta</button>
-                <input type="text" class="search" placeholder="Pesquisar" />
-                </div>
-            </header>
-
-            <section class="chart-section" style="margin-bottom: 2rem;">
-                <h3 style="margin-bottom: 1rem;">Sintomas</h3>
-                <PatientChart />
-            </section>
-
-            <table class="consultas-table" style="width: 100%; border-collapse: collapse;">
-                <thead>
-                <tr style="text-align: left; border-bottom: 2px solid #ccc;">
-                    <th style="padding: 0.75rem;">Cód.</th>
-                    <th style="padding: 0.75rem;">Descrição de Sintomas</th>
-                    <th style="padding: 0.75rem;">Data</th>
-                    <th style="padding: 0.75rem;">Horário</th>
-                    <th style="padding: 0.75rem;">Anexos</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr v-for="i in 6" :key="i" style="border-bottom: 1px solid #eee;">
-                    <td style="padding: 0.75rem;">001</td>
-                    <td style="padding: 0.75rem;">Dor forte no peito</td>
-                    <td style="padding: 0.75rem;">21/05/2025</td>
-                    <td style="padding: 0.75rem;">14:00</td>
-                    <td style="padding: 0.75rem;">
-                    <button class="btn">Abrir</button>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
+      <section
+        class="consultas-view"
+        style="
+          display: flex;
+          justify-content: center;
+          padding: 2rem;
+          margin-right: 100px;
+        "
+      >
+        <div style="width: 100%; max-width: 960px">
+          <header
+            class="header"
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 2rem;
+            "
+          >
+            <h2 style="font-size: 1.5rem">Consultas</h2>
+            <div style="display: flex; gap: 1rem">
+              <button @click="openModal('consulta')" class="btn">
+                + Nova Consulta
+              </button>
+              <input type="text" class="search" placeholder="Pesquisar" />
             </div>
-        </section>
+          </header>
+
+          <section class="chart-section" style="margin-bottom: 2rem">
+            <h3 style="margin-bottom: 1rem">Sintomas</h3>
+            <PatientChart />
+          </section>
+
+          <table
+            class="consultas-table"
+            style="width: 100%; border-collapse: collapse"
+          >
+            <thead>
+              <tr style="text-align: left; border-bottom: 2px solid #ccc">
+                <th style="padding: 0.75rem">Cód.</th>
+                <th style="padding: 0.75rem">Descrição de Sintomas</th>
+                <th style="padding: 0.75rem">Data</th>
+                <th style="padding: 0.75rem">Horário</th>
+                <th style="padding: 0.75rem">Anexos</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="i in 6" :key="i" style="border-bottom: 1px solid #eee">
+                <td style="padding: 0.75rem">001</td>
+                <td style="padding: 0.75rem">Dor forte no peito</td>
+                <td style="padding: 0.75rem">21/05/2025</td>
+                <td style="padding: 0.75rem">14:00</td>
+                <td style="padding: 0.75rem">
+                  <button class="btn">Abrir</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
     </template>
 
     <!-- Right Sidebar -->
@@ -222,48 +278,86 @@
       <div class="calendar">
         <h3>Outubro</h3>
         <div class="calendar-grid">
-          <span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span><span>D</span>
-          <span>19</span><span>20</span><span class="active">21</span><span>22</span>
-          <span>23</span><span>24</span><span>25</span>
+          <span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span
+          ><span>S</span><span>D</span> <span>19</span><span>20</span
+          ><span class="active">21</span><span>22</span> <span>23</span
+          ><span>24</span><span>25</span>
         </div>
       </div>
 
       <div class="right-appointments">
         <h3>Próximas Consultas</h3>
-        <AppointmentItem name="Samuel" specialty="Cardiologia" time="09:20 - 11:30" />
-        <AppointmentItem name="Lucas" specialty="Cardiologia" time="11:30 - 12:30" />
+        <AppointmentItem
+          name="Samuel"
+          specialty="Cardiologia"
+          time="09:20 - 11:30"
+        />
+        <AppointmentItem
+          name="Lucas"
+          specialty="Cardiologia"
+          time="11:30 - 12:30"
+        />
       </div>
     </aside>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import PatientChart from './PatientChart.vue'
+import { ref } from "vue";
+import PatientChart from "./PatientChart.vue";
 
-const activeView = ref('overview') // 'overview' ou 'pacientes'
-const activeModal = ref(null)
+const activeView = ref("overview"); // 'overview' ou 'pacientes'
+const activeModal = ref(null);
 
 function openModal(type) {
-  activeModal.value = type
+  activeModal.value = type;
 }
 
 function closeModal() {
-  activeModal.value = null
+  activeModal.value = null;
 }
 function showConsultas() {
-  activeView.value = 'consultas'
+  activeView.value = "consultas";
 }
 const pacientes = [
-  { codigo: '001', nome: 'Samuel Souza de Lins', nascimento: '26/02/1988', sexo: 'Masculino', urgencia: true },
-  { codigo: '002', nome: 'Lucas Emanuel da Silva', nascimento: '12/08/2002', sexo: 'Masculino', urgencia: false },
-  { codigo: '003', nome: 'Lucas Emanuel da Silva', nascimento: '12/08/2002', sexo: 'Masculino', urgencia: false },
-  { codigo: '004', nome: 'Lucas Emanuel da Silva', nascimento: '12/08/2002', sexo: 'Masculino', urgencia: false },
-  { codigo: '005', nome: 'Lucas Emanuel da Silva', nascimento: '12/08/2002', sexo: 'Masculino', urgencia: false }
-]
+  {
+    codigo: "001",
+    nome: "Samuel Souza de Lins",
+    nascimento: "26/02/1988",
+    sexo: "Masculino",
+    urgencia: true,
+  },
+  {
+    codigo: "002",
+    nome: "Lucas Emanuel da Silva",
+    nascimento: "12/08/2002",
+    sexo: "Masculino",
+    urgencia: false,
+  },
+  {
+    codigo: "003",
+    nome: "Lucas Emanuel da Silva",
+    nascimento: "12/08/2002",
+    sexo: "Masculino",
+    urgencia: false,
+  },
+  {
+    codigo: "004",
+    nome: "Lucas Emanuel da Silva",
+    nascimento: "12/08/2002",
+    sexo: "Masculino",
+    urgencia: false,
+  },
+  {
+    codigo: "005",
+    nome: "Lucas Emanuel da Silva",
+    nascimento: "12/08/2002",
+    sexo: "Masculino",
+    urgencia: false,
+  },
+];
 </script>
 <style scoped>
-
 .dashboard {
   display: flex;
   height: 100vh;
@@ -328,12 +422,11 @@ const pacientes = [
   flex-direction: column;
   overflow-y: auto;
 }
-.main-content::-webkit-scrollbar
-{
+.main-content::-webkit-scrollbar {
   width: 8px;
 }
 
-.main-content::-webkit-scrollbar-track{
+.main-content::-webkit-scrollbar-track {
   background: #f1f1f1;
 }
 
@@ -345,16 +438,15 @@ const pacientes = [
 }
 
 .main-content::-webkit-scrollbar-thumb:hover {
-  background-color: #388E3C;
+  background-color: #388e3c;
 }
 .right-sidebar {
-  width: 280px;
+  max-width: 300px;
+  width: 100%;
   background: white;
   border-left: 1px solid #e5e7eb;
   padding: 20px;
-  margin-right: -100px;
 }
-
 
 .logo {
   font-weight: bold;
@@ -387,7 +479,6 @@ const pacientes = [
   color: #0284c7;
 }
 
-
 .header {
   display: flex;
   justify-content: space-between;
@@ -405,7 +496,6 @@ const pacientes = [
   border-radius: 8px;
 }
 
-
 .welcome-card {
   background: #bae6fd;
   padding: 20px;
@@ -422,7 +512,6 @@ const pacientes = [
   margin: 4px 0 0;
   font-size: 14px;
 }
-
 
 .kpis {
   display: flex;
@@ -453,7 +542,6 @@ const pacientes = [
   font-size: 14px;
   color: gray;
 }
-
 
 .chart-section {
   background: white;
