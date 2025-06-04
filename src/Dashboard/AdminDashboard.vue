@@ -45,12 +45,12 @@
       <div class="bottom-exit">
         <a href="#" class="nav-item">
           <span class="icon">👤</span>
-          <span class="label">Sair</span>
+          <span @click="router.push('/login')" class="label">Sair</span>
         </a>
       </div>
     </aside>
 
-    <!-- Main Content Render -->
+    <!-- Main Content -->
     <main class="main-content">
       <template v-if="activeView === 'overview'">
         <header class="header">
@@ -71,7 +71,7 @@
 
         <section class="chart-section">
           <h3>Frequência de Pacientes</h3>
-          <PatientChart />
+          <PatientChart/>
         </section>
 
         <section class="bottom-section">
@@ -103,7 +103,7 @@
             <h3>Frequência de Pacientes</h3>
             <PatientChart />
           </section>
-          <table class="pacientes-table">
+          <table class="consultas-table">
             <thead>
               <tr>
                 <th>Cód.</th>
@@ -125,9 +125,68 @@
           </table>
         </section>
       </template>
+
+      <template v-else-if="activeView === 'consultas'">
+        <section class="consultas-view">
+          <div class="consultas-container">
+            <header class="consultas-header">
+              <h2>Consultas</h2>
+              <div class="header-actions">
+                <button @click="openModal('consulta')" class="btn">
+                  + Nova Consulta
+                </button>
+                <input
+                  type="text"
+                  v-model="searchQuery"
+                  class="search"
+                  placeholder="Pesquisar"
+                />
+              </div>
+            </header>
+
+            <section class="chart-section">
+              <h3>Sintomas</h3>
+              <PatientChart />
+            </section>
+
+            <div class="table-container">
+              <table class="consultas-table">
+                <thead>
+                  <tr>
+                    <th>Cód.</th>
+                    <th>Descrição de Sintomas</th>
+                    <th>Data</th>
+                    <th>Horário</th>
+                    <th>Anexos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="consulta in filteredConsultas"
+                    :key="consulta.codigoPaciente"
+                  >
+                    <td>{{ consulta.codigoPaciente }}</td>
+                    <td>{{ consulta.descricao }}</td>
+                    <td>{{ formatDate(consulta.data) }}</td>
+                    <td>{{ consulta.horario }}</td>
+                    <td>
+                      <button class="btn-small">Abrir</button>
+                    </td>
+                  </tr>
+                  <tr v-if="filteredConsultas.length === 0">
+                    <td colspan="5" class="no-results">
+                      Nenhuma consulta encontrada.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </template>
     </main>
 
-    <!-- Modal de paciente -->
+    <!-- Modais (mantidos iguais) -->
     <div v-if="activeModal === 'paciente'" class="modal-overlay">
       <div class="modal-content">
         <button class="modal-close" @click="closeModal">×</button>
@@ -135,30 +194,38 @@
         <p class="subtext">
           Insira os dados do seu paciente para localizarmos no Banco de Dados.
         </p>
+
         <label>Nome completo</label>
-        <input type="text" placeholder="Digite aqui" class="input" />
+        <input
+          v-model="paciente.nome"
+          type="text"
+          placeholder="Digite aqui"
+          class="input"
+        />
+
         <label>Data de nascimento</label>
-        <input type="date" class="input" />
+        <input v-model="paciente.dataNasc" type="date" class="input" />
+
         <div class="form-row">
           <div class="form-column">
             <label>Sexo</label>
-            <select class="input">
-              <option>Selecione</option>
-              <option>Masculino</option>
-              <option>Feminino</option>
+            <select v-model="paciente.sexo" class="input">
+              <option value="">Selecione</option>
+              <option value="Masculino">Masculino</option>
+              <option value="Feminino">Feminino</option>
             </select>
           </div>
           <div class="form-column">
             <label>Urgência</label>
-            <select class="input">
-              <option>Selecione</option>
-              <option>Alta</option>
-              <option>Média</option>
-              <option>Baixa</option>
+            <select v-model="paciente.urgencia" class="input">
+              <option value="false">Baixa</option>
+              <option value="Média">Média</option>
+              <option value="Alta">Alta</option>
             </select>
           </div>
         </div>
-        <button class="submit-button">Cadastrar</button>
+
+        <button class="submit-button" @click="addPaciente">Cadastrar</button>
       </div>
     </div>
     <div v-if="activeModal === 'consulta'" class="modal-overlay">
@@ -168,11 +235,19 @@
         <h2>Cadastrar consulta</h2>
         <p class="subtext">Insira os dados breves da consulta.</p>
 
-        <label>Cód. do Paciente</label>
-        <input type="text" placeholder="Digite aqui" class="input" />
+        <label for="codigoPaciente">Cód. do Paciente</label>
+        <input
+          id="codigoPaciente"
+          type="text"
+          v-model="consulta.codigoPaciente"
+          placeholder="Digite aqui"
+          class="input"
+        />
 
-        <label>Descrição breve de sintomas</label>
+        <label for="descricaoSintomas">Descrição breve de sintomas</label>
         <textarea
+          id="descricaoSintomas"
+          v-model="consulta.descricao"
           placeholder="Digite aqui"
           class="input"
           style="height: 100px"
@@ -180,89 +255,37 @@
 
         <div class="form-row">
           <div class="form-column">
-            <label>Data</label>
-            <input type="date" class="input" />
+            <label for="dataConsulta">Data</label>
+            <input
+              id="dataConsulta"
+              type="date"
+              v-model="consulta.data"
+              class="input"
+            />
           </div>
           <div class="form-column">
-            <label>Horário</label>
-            <input type="time" class="input" />
+            <label for="horarioConsulta">Horário</label>
+            <input
+              id="horarioConsulta"
+              type="time"
+              v-model="consulta.horario"
+              class="input"
+            />
           </div>
         </div>
 
-        <label>Anexos</label>
+        <label for="anexosConsulta">Anexos</label>
         <input
+          id="anexosConsulta"
           type="text"
+          v-model="consulta.anexos"
           placeholder="Arquivos de exames enviados, receitas (PDF ou imagens)"
           class="input"
         />
 
-        <button class="submit-button">Cadastrar</button>
+        <button class="submit-button" @click="addConsulta">Cadastrar</button>
       </div>
     </div>
-
-    <!-- Modal de consulta -->
-    <template v-else-if="activeView === 'consultas'">
-      <section
-        class="consultas-view"
-        style="
-          display: flex;
-          justify-content: center;
-          padding: 2rem;
-          margin-right: 100px;
-        "
-      >
-        <div style="width: 100%; max-width: 960px">
-          <header
-            class="header"
-            style="
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 2rem;
-            "
-          >
-            <h2 style="font-size: 1.5rem">Consultas</h2>
-            <div style="display: flex; gap: 1rem">
-              <button @click="openModal('consulta')" class="btn">
-                + Nova Consulta
-              </button>
-              <input type="text" class="search" placeholder="Pesquisar" />
-            </div>
-          </header>
-
-          <section class="chart-section" style="margin-bottom: 2rem">
-            <h3 style="margin-bottom: 1rem">Sintomas</h3>
-            <PatientChart />
-          </section>
-
-          <table
-            class="consultas-table"
-            style="width: 100%; border-collapse: collapse"
-          >
-            <thead>
-              <tr style="text-align: left; border-bottom: 2px solid #ccc">
-                <th style="padding: 0.75rem">Cód.</th>
-                <th style="padding: 0.75rem">Descrição de Sintomas</th>
-                <th style="padding: 0.75rem">Data</th>
-                <th style="padding: 0.75rem">Horário</th>
-                <th style="padding: 0.75rem">Anexos</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="i in 6" :key="i" style="border-bottom: 1px solid #eee">
-                <td style="padding: 0.75rem">001</td>
-                <td style="padding: 0.75rem">Dor forte no peito</td>
-                <td style="padding: 0.75rem">21/05/2025</td>
-                <td style="padding: 0.75rem">14:00</td>
-                <td style="padding: 0.75rem">
-                  <button class="btn">Abrir</button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </template>
 
     <!-- Right Sidebar -->
     <aside class="right-sidebar">
@@ -303,27 +326,21 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import PatientChart from "./PatientChart.vue";
+import { toast } from "vue3-toastify";
+import { useRouter } from "vue-router";
 
-const activeView = ref("overview"); // 'overview' ou 'pacientes'
+const activeView = ref("overview");
 const activeModal = ref(null);
 
-function openModal(type) {
-  activeModal.value = type;
-}
+const router = useRouter()
 
-function closeModal() {
-  activeModal.value = null;
-}
-function showConsultas() {
-  activeView.value = "consultas";
-}
-const pacientes = [
+const pacientes = ref([
   {
     codigo: "001",
     nome: "Samuel Souza de Lins",
-    nascimento: "26/02/1988",
+    nascimento: "26/02/2022",
     sexo: "Masculino",
     urgencia: true,
   },
@@ -334,29 +351,113 @@ const pacientes = [
     sexo: "Masculino",
     urgencia: false,
   },
-  {
-    codigo: "003",
-    nome: "Lucas Emanuel da Silva",
-    nascimento: "12/08/2002",
-    sexo: "Masculino",
+]);
+
+const consultas = ref([]);
+const searchQuery = ref("");
+
+const paciente = ref({
+  nome: "",
+  dataNasc: "",
+  sexo: "",
+  urgencia: false,
+});
+
+const consulta = ref({
+  codigoPaciente: "",
+  descricao: "",
+  data: "",
+  horario: "",
+  anexos: "",
+});
+
+function openModal(type) {
+  activeModal.value = type;
+}
+
+function closeModal() {
+  activeModal.value = null;
+  resetPacienteForm();
+  resetConsultaForm();
+}
+
+function addPaciente() {
+  if (
+    !paciente.value.nome ||
+    !paciente.value.dataNasc ||
+    !paciente.value.sexo
+  ) {
+    toast("Por favor preencha todos os campos obrigatórios", {
+      type: "warning",
+    });
+    return;
+  }
+
+  const novoPaciente = {
+    codigo: String(pacientes.value.length + 1).padStart(3, "0"),
+    nome: paciente.value.nome,
+    nascimento: paciente.value.dataNasc,
+    sexo: paciente.value.sexo,
+    urgencia: paciente.value.urgencia === "Alta",
+  };
+
+  pacientes.value.push(novoPaciente);
+  toast("Paciente cadastrado com sucesso", { type: "success" });
+  closeModal();
+}
+
+function addConsulta() {
+  if (
+    !consulta.value.codigoPaciente ||
+    !consulta.value.descricao ||
+    !consulta.value.data ||
+    !consulta.value.horario
+  ) {
+    toast("Por favor preencha todos os campos obrigatórios", {
+      type: "warning",
+    });
+    return;
+  }
+
+  const novaConsulta = { ...consulta.value };
+  consultas.value.push(novaConsulta);
+
+  toast("Consulta cadastrada com sucesso", { type: "success" });
+  closeModal();
+}
+
+function resetPacienteForm() {
+  paciente.value = {
+    nome: "",
+    dataNasc: "",
+    sexo: "",
     urgencia: false,
-  },
-  {
-    codigo: "004",
-    nome: "Lucas Emanuel da Silva",
-    nascimento: "12/08/2002",
-    sexo: "Masculino",
-    urgencia: false,
-  },
-  {
-    codigo: "005",
-    nome: "Lucas Emanuel da Silva",
-    nascimento: "12/08/2002",
-    sexo: "Masculino",
-    urgencia: false,
-  },
-];
+  };
+}
+
+function resetConsultaForm() {
+  consulta.value = {
+    codigoPaciente: "",
+    descricao: "",
+    data: "",
+    horario: "",
+    anexos: "",
+  };
+}
+
+function formatDate(date) {
+  return new Date(date).toLocaleDateString();
+}
+
+const filteredConsultas = computed(() =>
+  consultas.value.filter((c) =>
+    Object.values(c).some((value) =>
+      value.toString().toLowerCase().includes(searchQuery.value.toLowerCase())
+    )
+  )
+);
 </script>
+
 <style scoped>
 .dashboard {
   display: flex;
@@ -372,16 +473,6 @@ const pacientes = [
   padding: 1rem 0;
   border-right: 1px solid #e0e0e0;
   height: 100vh;
-}
-
-.logo-container {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 2rem;
-}
-
-.logo-img {
-  height: 40px;
 }
 
 .nav-menu {
@@ -414,6 +505,7 @@ const pacientes = [
   margin-top: auto;
   padding: 1rem 0;
 }
+
 .main-content {
   flex: 1;
   padding: 20px;
@@ -421,7 +513,9 @@ const pacientes = [
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  min-height: 0;
 }
+
 .main-content::-webkit-scrollbar {
   width: 8px;
 }
@@ -440,6 +534,7 @@ const pacientes = [
 .main-content::-webkit-scrollbar-thumb:hover {
   background-color: #388e3c;
 }
+
 .right-sidebar {
   max-width: 300px;
   width: 100%;
@@ -448,134 +543,94 @@ const pacientes = [
   padding: 20px;
 }
 
-.logo {
-  font-weight: bold;
-  font-size: 20px;
-  margin-bottom: 40px;
+/* Estilos para a view de consultas */
+.consultas-view {
+  width: 100%;
+  padding: 1rem;
+  flex: 1;
 }
 
-.menu {
+.consultas-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  height: 100%;
 }
 
-.menu-item {
+.consultas-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 10px;
-  padding: 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  color: #374151;
+  margin-bottom: 1.5rem;
 }
 
-.menu-item:hover {
-  background: #f3f4f6;
-}
-
-.menu-item.active {
-  background: #e0f2fe;
-  color: #0284c7;
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  max-height: 3rem;
+  margin: 1rem 0;
 }
 
-.header h1 {
-  font-size: 24px;
-  font-weight: 600;
-}
-
-.search {
-  padding: 8px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-}
-
-.welcome-card {
-  background: #bae6fd;
-  padding: 20px;
-  border-radius: 16px;
-  margin: 20px 0;
-}
-
-.welcome-card h2 {
-  margin: 0;
-  font-size: 20px;
-}
-
-.welcome-card p {
-  margin: 4px 0 0;
-  font-size: 14px;
-}
-
-.kpis {
-  display: flex;
-  gap: 20px;
-  margin-bottom: 20px;
-}
-
-.kpi-card {
-  background: white;
-  padding: 16px;
-  border-radius: 16px;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex: 1;
-}
-
-.kpi-card .icon {
-  font-size: 28px;
-}
-
-.kpi-card .value {
-  font-size: 20px;
-  font-weight: 600;
-}
-
-.kpi-card .label {
-  font-size: 14px;
-  color: gray;
-}
-
-.chart-section {
-  background: white;
-  padding: 20px;
-  border-radius: 16px;
-  margin-bottom: 20px;
-}
-
-.bottom-section {
-  display: flex;
-  gap: 20px;
-}
-
-.next-appointments {
-  background: white;
-  padding: 20px;
-  border-radius: 16px;
-  flex: 1;
+h1 {
+  font-size: 2rem;
 }
 
 .actions {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  gap: 2rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.table-container {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.consultas-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5rem;
+}
+
+.consultas-table th,
+.consultas-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+
+
+.consultas-table th {
+  border-bottom: 2px solid #ccc;
+  font-weight: 600;
+  background-color: #f8f9fa;
+}
+
+.no-results {
+  text-align: center;
+  padding: 1.5rem;
+  color: #666;
 }
 
 .btn {
   background: #0284c7;
   color: white;
   border: none;
-  padding: 12px;
-  border-radius: 12px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
+  transition: background-color 0.2s;
 }
 
 .btn:hover {
@@ -601,6 +656,17 @@ const pacientes = [
 
 .profile .name {
   font-weight: 600;
+}
+
+.btn-small {
+  background: #0284c7;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background-color 0.2s;
 }
 
 .profile .specialty {
@@ -636,12 +702,24 @@ const pacientes = [
   border-radius: 8px;
 }
 
-/* Appointments */
-.appointment {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 10px;
+.btn-small:hover {
+  background: #0369a1;
+}
+
+.search {
+  padding: 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  min-width: 250px;
+}
+
+.chart-section {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .appointment .avatar {
@@ -668,6 +746,20 @@ const pacientes = [
   font-size: 11px;
   color: #9ca3af;
 }
+
+.welcome-card {
+  background: #bae6fd;
+  padding: 20px;
+  border-radius: 16px;
+  margin: 20px 0;
+}
+
+.kpis {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -697,6 +789,7 @@ const pacientes = [
   right: 1rem;
   border: none;
   background: transparent;
+  color: black;
   font-size: 1.5rem;
   cursor: pointer;
 }

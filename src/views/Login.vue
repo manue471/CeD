@@ -2,25 +2,25 @@
   <div class="login-page">
     <div class="account-illustration">
       <img src="../assets/logo-ced.png" alt="Logo CeD+" />
-        <p>Crescimento e Desenvolvimento</p>
+      <p>Crescimento e Desenvolvimento</p>
     </div>
-  
+
     <div class="form-container">
       <h1>Entrar</h1>
       <p class="subtitle">Insira seus dados para acessar sua conta no CeD+</p>
-  
+
       <label for="cpf">CPF</label>
-      <input id="cpf" type="text" placeholder="Digite seu CPF" />
-  
+      <input id="cpf" type="text" placeholder="Digite seu CPF" v-model="cpf" />
+
       <label for="senha">Senha</label>
-      <input id="senha" type="password" placeholder="Digite sua senha" />
-  
+      <input id="senha" type="password" placeholder="Digite sua senha" v-model="senha" />
+
       <div class="password-options">
         <a href="#">Esqueceu a senha?</a>
       </div>
-  
-      <button class="submit-btn">Entrar</button>
-  
+
+      <button class="submit-btn" @click="handleLogin">Entrar</button>
+
       <p class="login-link">
         Ainda não é nosso parceiro?
         <a href="/">Cadastre-se</a>
@@ -28,6 +28,24 @@
     </div>
   </div>
 </template>
+
+<script setup>
+import { useRouter } from 'vue-router';
+import { ref } from 'vue';
+import { toast } from 'vue3-toastify';
+
+const router = useRouter();
+const cpf = ref('');
+const senha = ref('');
+
+const handleLogin = () => {
+  if (cpf.value && senha.value) {
+    router.push('/adminDashboard');
+  } else {
+    toast('Preencha todos os campos obrigatórios', { type: 'warning' } )
+  }
+};
+</script>
   
 <style scoped>
   .login-page {
