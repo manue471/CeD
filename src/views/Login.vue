@@ -33,14 +33,29 @@
 import { useRouter } from 'vue-router';
 import { ref } from 'vue';
 import { toast } from 'vue3-toastify';
+import { useAuthService } from '../services/auth.service';
+
+const { login } = useAuthService();
 
 const router = useRouter();
 const cpf = ref('');
 const senha = ref('');
 
-const handleLogin = () => {
+const handleLogin = async () => {
   if (cpf.value && senha.value) {
-    router.push('/adminDashboard');
+    await login(cpf.value, senha.value)
+      .then((res) => {
+        if (res.statusCode === 401) {
+          toast('Erro ao realizar login. Verifique suas credenciais.', { type: 'error' });
+          return;
+        }
+        localStorage.setItem('cpf', res.user.cpf);
+        router.push('/adminDashboard');
+      })
+      .catch((error) => {
+        console.error(error);
+        toast('Erro ao realizar login. Verifique suas credenciais.', { type: 'error' });
+      });
   } else {
     toast('Preencha todos os campos obrigatórios', { type: 'warning' } )
   }

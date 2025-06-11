@@ -44,6 +44,13 @@
           <option>Pediatria</option>
           <option>Outro</option>
         </select>
+
+        <label for="cpf">CPF:</label>
+        <input id="cpf" v-model="cpf" placeholder="Digite seu CPF" type="text" />
+
+        <label for="password">Senha:</label>
+        <input id="password" v-model="password" placeholder="Digite sua senha" type="password" />
+      
   
         <button class="submit-btn" @click="submitForm">Cadastrar</button>
   
@@ -56,19 +63,54 @@
   
   <script setup>
   import { ref } from 'vue'
+  import { useAuthService } from '../services/auth.service'
+  import { toast } from 'vue3-toastify'
+  import { useRoute } from 'vue-router'
+
+  const route = useRoute()
   
   const role = ref('')
   const registryType = ref('')
   const registryNumber = ref('')
   const uf = ref('')
   const specialty = ref('')
+  const cpf = ref('')
+  const password = ref('')
+
+  const { register } = useAuthService()
   
-  const submitForm = () => {
-    if (!role.value || !registryType.value || !registryNumber.value || !uf.value || !specialty.value) {
-      alert('Preencha todos os campos obrigatórios.')
+  const submitForm = async () => {
+    if (!role.value || !registryType.value || !registryNumber.value || !uf.value || !specialty.value, !cpf.value || !password.value) {
+      toast('Preencha todos os campos obrigatórios.', { type: 'warning' })
       return
     }
-    console.log('Dados enviados:', { role, registryType, registryNumber, uf, specialty })
+    console.log({
+      role: role.value,
+      registryType: registryType.value,
+      registryNumber: registryNumber.value,
+      uf: uf.value,
+      specialty: specialty.value,
+      cpf: cpf.value,
+      password: password.value
+    });
+    
+    const res = await register({
+      role: role.value,
+      registryType: registryType.value,
+      registryNumber: registryNumber.value,
+      uf: uf.value,
+      specialty: specialty.value,
+      cpf: cpf.value,
+      password: password.value
+    })
+
+    if (res.id) {
+      toast('Cadastro realizado com sucesso!', { type: 'success' })
+      route.push('/login')
+    } else {
+      toast(res.message || 'Erro ao cadastrar. Tente novamente.', { type: 'error' })
+    }
+
   }
   </script>
   

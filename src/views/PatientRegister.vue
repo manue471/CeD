@@ -54,13 +54,6 @@
         <label for="senha">Senha</label>
         <input type="password" id="senha" placeholder="Digite a sua senha" />
   
-        <h2>Dados profissionais</h2>
-        <p>Atendimento por teleconsulta?</p>
-        <div class="checkbox-group">
-          <label><input type="radio" name="teleconsulta" /> Sim</label>
-          <label><input type="radio" name="teleconsulta" /> Não</label>
-        </div>
-  
         <p class="termos">
           Clicando abaixo, você concorda com os
           <a href="#">Termos de Uso</a> e

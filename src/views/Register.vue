@@ -11,7 +11,6 @@
         <select id="role" v-model="selectedRole">
           <option disabled value="">Selecione</option>
           <option>Administrador</option>
-          <option>Paciente</option>
         </select>
   
         <div class="terms">

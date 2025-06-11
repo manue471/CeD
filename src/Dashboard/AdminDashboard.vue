@@ -59,7 +59,7 @@
         </header>
 
         <section class="welcome-card">
-          <h2>Olá Dr. Daniel</h2>
+          <h2>Olá</h2>
           <p>Cheque os seus pacientes e as suas consultas do dia!</p>
         </section>
 
@@ -71,7 +71,7 @@
 
         <section class="chart-section">
           <h3>Frequência de Pacientes</h3>
-          <PatientChart/>
+          <PatientChart />
         </section>
 
         <section class="bottom-section">
@@ -97,7 +97,12 @@
             <button class="btn" @click="openModal('paciente')">
               + Novo Paciente
             </button>
-            <input type="text" class="search" placeholder="Pesquisar" />
+            <input
+              type="text"
+              class="search"
+              placeholder="Pesquisar"
+              v-model="searchPatients"
+            />
           </div>
           <section class="chart-section">
             <h3>Frequência de Pacientes</h3>
@@ -114,10 +119,10 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="p in pacientes" :key="p.codigo">
+              <tr v-for="p in filteredPacientes" :key="p.codigo">
                 <td>{{ p.codigo }}</td>
                 <td>{{ p.nome }}</td>
-                <td>{{ p.nascimento }}</td>
+                <td>{{ formatDate(p.nascimento) }}</td>
                 <td>{{ p.sexo }}</td>
                 <td>{{ p.urgencia ? "Sim" : "Não" }}</td>
               </tr>
@@ -145,8 +150,8 @@
             </header>
 
             <section class="chart-section">
-              <h3>Sintomas</h3>
-              <PatientChart />
+              <h3>Consultas por mês</h3>
+              <ConsultationChart />
             </section>
 
             <div class="table-container">
@@ -169,11 +174,12 @@
                     <td>{{ consulta.descricao }}</td>
                     <td>{{ formatDate(consulta.data) }}</td>
                     <td>{{ consulta.horario }}</td>
-                    <td>
+                    <td v-if="consulta.anexos">
                       <button class="btn-small">Abrir</button>
                     </td>
+                    <td v-else>Nenhum anexo</td>
                   </tr>
-                  <tr v-if="filteredConsultas.length === 0">
+                  <tr v-if="filteredConsultas?.length === 0">
                     <td colspan="5" class="no-results">
                       Nenhuma consulta encontrada.
                     </td>
@@ -235,14 +241,16 @@
         <h2>Cadastrar consulta</h2>
         <p class="subtext">Insira os dados breves da consulta.</p>
 
-        <label for="codigoPaciente">Cód. do Paciente</label>
-        <input
-          id="codigoPaciente"
-          type="text"
-          v-model="consulta.codigoPaciente"
-          placeholder="Digite aqui"
-          class="input"
-        />
+        <div>
+          <label for="codigoPaciente">Cód. do Paciente</label>
+          <input
+            id="codigoPaciente"
+            type="text"
+            v-model="consulta.codigoPaciente"
+            placeholder="Digite aqui"
+            class="input"
+          />
+        </div>
 
         <label for="descricaoSintomas">Descrição breve de sintomas</label>
         <textarea
@@ -292,49 +300,53 @@
       <div class="profile">
         <div class="avatar">👨‍⚕️</div>
         <div>
-          <p class="name">Daniel Souza</p>
-          <p class="specialty">Cardiologista</p>
-          <p class="location">João Pessoa, PB</p>
+          <p class="specialty">{{ user.specialty }}</p>
+          <p class="location">{{ user.uf }}</p>
         </div>
       </div>
 
       <div class="calendar">
-        <h3>Outubro</h3>
+        <h3>{{ currentMonthName }}</h3>
         <div class="calendar-grid">
-          <span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span
-          ><span>S</span><span>D</span> <span>19</span><span>20</span
-          ><span class="active">21</span><span>22</span> <span>23</span
-          ><span>24</span><span>25</span>
-        </div>
-      </div>
+          <span v-for="dayLetter in dayLetters" :key="dayLetter">{{
+            dayLetter
+          }}</span>
 
-      <div class="right-appointments">
-        <h3>Próximas Consultas</h3>
-        <AppointmentItem
-          name="Samuel"
-          specialty="Cardiologia"
-          time="09:20 - 11:30"
-        />
-        <AppointmentItem
-          name="Lucas"
-          specialty="Cardiologia"
-          time="11:30 - 12:30"
-        />
+          <span
+            v-for="day in currentWeekDays"
+            :key="day.date"
+            :class="{ active: day.isToday }"
+          >
+            {{ day.day }}
+          </span>
+        </div>
       </div>
     </aside>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import PatientChart from "./PatientChart.vue";
 import { toast } from "vue3-toastify";
 import { useRouter } from "vue-router";
+import { usePatientService } from "../services/patient.service";
+import { useConsultationService } from "../services/consultation.service";
+import { useAuthService } from "../services/auth.service";
+import ConsultationChart from "./ConsultationChart.vue";
 
 const activeView = ref("overview");
 const activeModal = ref(null);
 
-const router = useRouter()
+const userCpf = localStorage.getItem("cpf");
+
+const { getUSerByCpf } = useAuthService();
+const user = ref({
+  specialty: "Cardiologia",
+  uf: "SP",
+});
+
+const router = useRouter();
 
 const pacientes = ref([
   {
@@ -355,6 +367,7 @@ const pacientes = ref([
 
 const consultas = ref([]);
 const searchQuery = ref("");
+const searchPatients = ref("");
 
 const paciente = ref({
   nome: "",
@@ -369,6 +382,70 @@ const consulta = ref({
   data: "",
   horario: "",
   anexos: "",
+});
+
+const { create, getAll } = usePatientService();
+
+const { create: createConsulta, getAll: getConsultas } =
+  useConsultationService();
+
+const fetchConsultas = async () => {
+  try {
+    const response = await getConsultas();
+    console.log("Consultas:", response);
+
+    consultas.value = response;
+  } catch (error) {
+    console.error("Erro ao buscar consultas:", error);
+    toast("Erro ao buscar consultas", { type: "error" });
+  }
+};
+
+const filterConsultas = () => {
+  if (!searchQuery.value) {
+    return consultas.value;
+  }
+  return consultas.value.filter(
+    (consulta) =>
+      consulta.descricao
+        .toLowerCase()
+        .includes(searchQuery.value.toLowerCase()) ||
+      consulta.codigoPaciente.includes(searchQuery.value.toLowerCase())
+  );
+};
+
+const fetchPacientes = async () => {
+  try {
+    const response = await getAll();
+    console.log("Pacientes:", response);
+
+    pacientes.value = response;
+  } catch (error) {
+    console.error("Erro ao buscar pacientes:", error);
+    toast("Erro ao buscar pacientes", { type: "error" });
+  }
+};
+
+onMounted(async () => {
+  if (!userCpf) {
+    router.push("/login");
+    return;
+  }
+  try {
+    const userData = await getUSerByCpf(userCpf);
+    console.log("Usuário:", userData);
+
+    user.value = userData;
+  } catch (error) {
+    toast("Erro ao buscar usuário", { type: "error" });
+  }
+  await fetchPacientes();
+  await fetchConsultas();
+  const interval = setInterval(() => {
+    today.value = new Date();
+  }, 60000);
+
+  return () => clearInterval(interval);
 });
 
 function openModal(type) {
@@ -401,8 +478,16 @@ function addPaciente() {
     urgencia: paciente.value.urgencia === "Alta",
   };
 
-  pacientes.value.push(novoPaciente);
-  toast("Paciente cadastrado com sucesso", { type: "success" });
+  create(novoPaciente)
+    .then(async (res) => {
+      console.log(res);
+      toast("Paciente cadastrado com sucesso", { type: "success" });
+    })
+    .catch((error) => {
+      console.error("Erro ao cadastrar paciente:", error);
+      toast("Erro ao cadastrar paciente", { type: "error" });
+    });
+
   closeModal();
 }
 
@@ -419,11 +504,25 @@ function addConsulta() {
     return;
   }
 
-  const novaConsulta = { ...consulta.value };
-  consultas.value.push(novaConsulta);
+  const novaConsulta = {
+    codigoPaciente: String(consulta.value.codigoPaciente),
+    descricao: consulta.value.descricao,
+    data: formatDate(consulta.value.data),
+    horario: formatTime(consulta.value.horario),
+    anexos: consulta.value.anexos || "",
+  };
 
-  toast("Consulta cadastrada com sucesso", { type: "success" });
-  closeModal();
+  createConsulta(novaConsulta)
+    .then(async (res) => {
+      console.log(res);
+      await fetchConsultas();
+      toast("Consulta cadastrada com sucesso", { type: "success" });
+      closeModal();
+    })
+    .catch((error) => {
+      console.error("Erro ao cadastrar consulta:", error);
+      toast("Erro ao cadastrar consulta", { type: "error" });
+    });
 }
 
 function resetPacienteForm() {
@@ -449,13 +548,98 @@ function formatDate(date) {
   return new Date(date).toLocaleDateString();
 }
 
-const filteredConsultas = computed(() =>
-  consultas.value.filter((c) =>
-    Object.values(c).some((value) =>
-      value.toString().toLowerCase().includes(searchQuery.value.toLowerCase())
-    )
-  )
-);
+function formatTime(timeString) {
+  if (typeof timeString === "string" && timeString.match(/^\d{2}:\d{2}$/)) {
+    return timeString;
+  }
+
+  return timeString.substring(0, 5);
+}
+
+const filteredConsultas = computed(() => {
+  if (!searchQuery.value) {
+    return consultas.value;
+  }
+
+  return consultas.value.filter((consulta) =>
+    Object.values(consulta).some((value) => {
+      if (value === null || value === undefined) {
+        return false;
+      }
+
+      return value
+        .toString()
+        .toLowerCase()
+        .includes(searchQuery.value.toLowerCase());
+    })
+  );
+});
+
+const filteredPacientes = computed(() => {
+  if (!searchPatients.value) {
+    return pacientes.value;
+  }
+
+  return pacientes.value.filter((paciente) =>
+    Object.values(paciente).some((value) => {
+      if (value === null || value === undefined) {
+        return false;
+      }
+
+      return value
+        .toString()
+        .toLowerCase()
+        .includes(searchPatients.value.toLowerCase());
+    })
+  );
+});
+
+const today = ref(new Date());
+
+const dayLetters = ["D", "S", "T", "Q", "Q", "S", "S"];
+
+const currentMonthName = computed(() => {
+  const months = [
+    "Janeiro",
+    "Fevereiro",
+    "Março",
+    "Abril",
+    "Maio",
+    "Junho",
+    "Julho",
+    "Agosto",
+    "Setembro",
+    "Outubro",
+    "Novembro",
+    "Dezembro",
+  ];
+  return months[today.value.getMonth()];
+});
+
+function getStartOfWeek(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day;
+  return new Date(d.setDate(diff));
+}
+
+const currentWeekDays = computed(() => {
+  const startOfWeek = getStartOfWeek(today.value);
+  const days = [];
+
+  for (let i = 0; i < 7; i++) {
+    const currentDay = new Date(startOfWeek);
+    currentDay.setDate(startOfWeek.getDate() + i);
+
+    days.push({
+      day: currentDay.getDate(),
+      date: currentDay.toISOString().split("T")[0],
+      isToday: currentDay.toDateString() === today.value.toDateString(),
+    });
+  }
+
+  return days;
+});
 </script>
 
 <style scoped>
@@ -608,8 +792,6 @@ h1 {
   border-bottom: 1px solid #eee;
 }
 
-
-
 .consultas-table th {
   border-bottom: 2px solid #ccc;
   font-weight: 600;
@@ -642,6 +824,7 @@ h1 {
   gap: 12px;
   align-items: center;
   margin-bottom: 30px;
+  justify-content: flex-start;
 }
 
 .profile .avatar {
@@ -675,31 +858,8 @@ h1 {
 }
 
 .profile .location {
-  font-size: 12px;
+  font-size: 14px;
   color: #9ca3af;
-}
-
-/* Calendar */
-.calendar h3 {
-  margin-bottom: 8px;
-}
-
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-  text-align: center;
-  font-size: 13px;
-}
-
-.calendar-grid span {
-  padding: 4px;
-}
-
-.calendar-grid .active {
-  background: #0284c7;
-  color: white;
-  border-radius: 8px;
 }
 
 .btn-small:hover {
@@ -775,12 +935,10 @@ h1 {
 
 .modal-content {
   background: white;
-  padding: 2rem;
-  border-radius: 1rem;
-  width: 500px;
-  max-width: 95%;
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
+  padding: 2rem 3rem;
   position: relative;
+  border-radius: 1rem;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.2);
 }
 
 .modal-close {
@@ -825,5 +983,56 @@ h1 {
   border: none;
   border-radius: 8px;
   cursor: pointer;
+}
+
+.calendar {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.calendar h3 {
+  margin: 0 0 15px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  text-align: center;
+}
+
+.calendar-grid span {
+  padding: 8px 4px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+}
+
+.calendar-grid span:nth-child(-n + 7) {
+  font-weight: 600;
+  color: #999;
+  font-size: 12px;
+}
+
+.calendar-grid span:nth-child(n + 8) {
+  color: #333;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.calendar-grid span:nth-child(n + 8):hover {
+  background-color: #f0f0f0;
+}
+
+.calendar-grid span.active {
+  background-color: #bae6fd;
+  color: white;
+  font-weight: 600;
 }
 </style>
